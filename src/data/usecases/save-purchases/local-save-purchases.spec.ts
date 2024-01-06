@@ -1,16 +1,18 @@
 import { CacheStore } from "@/data/protocols/cache"
 import { LocalSavePurchases } from '@/data/usecases/save-purchases'
 class CacheStoreSpy implements CacheStore {
-    key: string
+    deleteKey: string
+    insertKey: string
     deleteCallsCount = 0
     insertCallCount = 0
 
-    insert(): void {
+    insert(key: string): void {
         this.insertCallCount++
+        this.insertKey = key
     }
 
     delete(key: string): void {
-        this.key = key
+        this.deleteKey = key
         this.deleteCallsCount++
     }
 }
@@ -40,7 +42,7 @@ describe('LocalSavePurchases', () => {
         const { sut, cacheStore } = makeSut()
         await sut.save()
         expect(cacheStore.deleteCallsCount).toBe(1)
-        expect(cacheStore.key).toBe('purchases')
+        expect(cacheStore.deleteKey).toBe('purchases')
     })
 
     it('Should not insert not save new cache if delete faiils', async () => {
@@ -53,9 +55,10 @@ describe('LocalSavePurchases', () => {
 
     it('Should  insert new cache  if delete sucess', async () => {
         const { sut, cacheStore } = makeSut()
-        const promise = sut.save()
+        await sut.save()
         expect(cacheStore.deleteCallsCount).toBe(1)
         expect(cacheStore.insertCallCount).toBe(1)
+        expect(cacheStore.insertKey).toBe('purchases')
         //expect(promise).rejects.toThrow()
     })
 })
