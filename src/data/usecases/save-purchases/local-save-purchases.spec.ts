@@ -1,19 +1,26 @@
 import { CacheStore } from "@/data/protocols/cache"
 import { LocalSavePurchases } from '@/data/usecases/save-purchases'
+import { SavePurchases } from "@/domain/usecases/save-purchases.usecase"
 class CacheStoreSpy implements CacheStore {
     deleteKey: string
     insertKey: string
     deleteCallsCount = 0
     insertCallCount = 0
+    insertValues: Array<SavePurchases.Params> = []
 
-    insert(key: string): void {
+    insert(key: string, value:any): void {
         this.insertCallCount++
         this.insertKey = key
+        this.insertValues = value
     }
 
     delete(key: string): void {
         this.deleteKey = key
         this.deleteCallsCount++
+    }
+
+    simulateDeleteError(): void {
+        jest.spyOn(CacheStoreSpy.prototype, 'delete').mockImplementationOnce(() => { throw new Error() })
     }
 }
 
@@ -33,6 +40,14 @@ const makeSut = (): SutTypes => {
     }
 }
 
+const mockPurchases = (): Array<SavePurchases.Params> => [
+    {
+        id: '1',
+        date: new Date(),
+        value: 100
+    }
+]
+
 describe('LocalSavePurchases', () => {
     it('Should not delete cache on sut.init', () => {
         const { cacheStore } = makeSut()
@@ -40,25 +55,27 @@ describe('LocalSavePurchases', () => {
     })
     it('Should delete old cache on sut.save', async () => {
         const { sut, cacheStore } = makeSut()
-        await sut.save()
+        await sut.save(mockPurchases())
         expect(cacheStore.deleteCallsCount).toBe(1)
         expect(cacheStore.deleteKey).toBe('purchases')
     })
 
     it('Should not insert not save new cache if delete faiils', async () => {
         const { sut, cacheStore } = makeSut()
-        jest.spyOn(cacheStore, 'delete').mockImplementation(() => { throw new Error() })
-        const promise = sut.save()
+        cacheStore.simulateDeleteError()
+        const promise = sut.save(mockPurchases())
         expect(cacheStore.insertCallCount).toBe(0)
         expect(promise).rejects.toThrow()
     })
 
     it('Should  insert new cache  if delete sucess', async () => {
         const { sut, cacheStore } = makeSut()
-        await sut.save()
+        const purchases = mockPurchases()
+        await sut.save(purchases)
         expect(cacheStore.deleteCallsCount).toBe(1)
         expect(cacheStore.insertCallCount).toBe(1)
         expect(cacheStore.insertKey).toBe('purchases')
-        //expect(promise).rejects.toThrow()
+
+        expect(cacheStore.insertValues).toBe(purchases)
     })
 })
