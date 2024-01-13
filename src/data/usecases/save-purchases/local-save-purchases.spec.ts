@@ -39,7 +39,7 @@ describe('LocalSavePurchases', () => {
         expect(cacheStore.messages).toEqual([
             CacheStoreSpy.Message.delete
         ])
-        expect(promise).rejects.toThrow()
+        await expect(promise).rejects.toThrow()
     })
 
     it('Should  insert new cache  if delete sucess', async () => {
@@ -61,6 +61,6 @@ describe('LocalSavePurchases', () => {
         expect(cacheStore.messages).toEqual([
             CacheStoreSpy.Message.delete, CacheStoreSpy.Message.insert
         ])
-        expect(promise).rejects.toThrow()
+        await expect(promise).rejects.toThrow()
     })
 })
