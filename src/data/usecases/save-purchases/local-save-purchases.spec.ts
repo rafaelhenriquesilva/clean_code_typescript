@@ -1,6 +1,7 @@
 import { CacheStore } from "@/data/protocols/cache"
 import { LocalSavePurchases } from '@/data/usecases/save-purchases'
 import { SavePurchases } from "@/domain/usecases/save-purchases.usecase"
+import { mockPurchases } from '@/data/tests'
 class CacheStoreSpy implements CacheStore {
     deleteKey: string
     insertKey: string
@@ -44,13 +45,6 @@ const makeSut = (): SutTypes => {
     }
 }
 
-const mockPurchases = (): Array<SavePurchases.Params> => [
-    {
-        id: '1',
-        date: new Date(),
-        value: 100
-    }
-]
 
 describe('LocalSavePurchases', () => {
     it('Should not delete cache on sut.init', () => {
