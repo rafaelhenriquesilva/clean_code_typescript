@@ -32,7 +32,7 @@ describe('LocalValidatePurchases', () => {
     })
 
     
-    it('Should has no side effects if load succeds', () => {
+    it('Should has no side effects if load succeeds', () => {
         const currentDate = new Date()
         const timestamp = getCacheExpirationDate(currentDate)
         timestamp.setSeconds(timestamp.getSeconds() + 1)
@@ -43,6 +43,35 @@ describe('LocalValidatePurchases', () => {
         sut.validate()
         expect(cacheStore.fetchKey).toBe('purchases')
         expect(cacheStore.actions).toEqual([CacheStoreSpy.Action.fetch])
+    })
+
+    it('Should delete cache if cache is expired', () => {
+        const currentDate = new Date()
+        const timestamp = getCacheExpirationDate(currentDate)
+        timestamp.setSeconds(timestamp.getSeconds() - 1)
+        const { cacheStore ,sut} = makeSut(currentDate)
+        cacheStore.fetchResult = {
+            timestamp
+        }
+        sut.validate()
+        
+        expect(cacheStore.actions).toEqual([CacheStoreSpy.Action.fetch, CacheStoreSpy.Action.delete])
+        expect(cacheStore.fetchKey).toBe('purchases')
+        expect(cacheStore.deleteKey).toBe('purchases')
+    })
+
+    it('Should delete cache if its cache is on expiration date', () => {
+        const currentDate = new Date()
+        const timestamp = getCacheExpirationDate(currentDate)
+        const { cacheStore ,sut} = makeSut(currentDate)
+        cacheStore.fetchResult = {
+            timestamp
+        }
+        sut.validate()
+        
+        expect(cacheStore.actions).toEqual([CacheStoreSpy.Action.fetch, CacheStoreSpy.Action.delete])
+        expect(cacheStore.fetchKey).toBe('purchases')
+        expect(cacheStore.deleteKey).toBe('purchases')
     })
 
 })
